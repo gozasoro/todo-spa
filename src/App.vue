@@ -3,9 +3,9 @@
     <div class="row">
       <div class="col-sm-6 bg-white mx-auto mt-5 p-3 border rounded row">
         <div class="col-sm-6">
-          <MemoList :memos="memos" @show="showMemo($event)" @add="addNewMemo"></MemoList>
+          <MemoList :memos="memos" @show="showMemo" @add="addNewMemo"></MemoList>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-6" v-if="isEditable">
           <textarea class="form-control mb-2" rows="5" v-model="editableContent" ref="focusArea"></textarea>
           <div class="d-flex">
             <button @click="editMemo" class="btn btn-success flex-grow-1">編集</button>
@@ -29,6 +29,7 @@ export default {
     return {
       editableContent: '',
       editableIndex: null,
+      isEditable: false,
       memos: [
         {
           id: 0,
@@ -40,39 +41,43 @@ export default {
   },
   created () {
     const localData = JSON.parse(localStorage.getItem('memos'))
-    console.log(localData)
     if (localData && localData.length) {
       this.memos = localData
       this.nextId = localData[this.memos.length - 1].id + 1
     }
   },
-  updated () {
-    localStorage.setItem('memos', JSON.stringify(this.memos))
-  },
   methods: {
     addNewMemo () {
       this.memos.push({
         id: this.nextId,
-        content: ''
+        content: '新規メモ'
       })
+      this.saveMemo()
       this.showMemo(this.memos.length - 1)
       this.$refs.focusArea.focus()
     },
     showMemo (index) {
       this.editableIndex = index
       this.editableContent = this.memos[index].content
+      this.isEditable = true
     },
     editMemo () {
       if (this.editableIndex === null) return
       this.memos[this.editableIndex].content = this.editableContent
       this.editableIndex = null
       this.editableContent = ''
+      this.saveMemo()
     },
     deleteMemo () {
       if (this.editableIndex === null) return
       this.memos.splice(this.editableIndex, 1)
       this.editableIndex = null
       this.editableContent = ''
+      this.saveMemo()
+    },
+    saveMemo () {
+      localStorage.setItem('memos', JSON.stringify(this.memos))
+      this.isEditable = false
     }
   }
 }
